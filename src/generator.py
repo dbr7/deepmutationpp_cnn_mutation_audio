@@ -1,8 +1,11 @@
-from deepmutationpp.cnn_mutation_audio.src.cnn_operator import *
+# from deepmutationpp.cnn_mutation_audio.src.cnn_operator import *
+from cnn_operator import *
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.models import load_model
+# from tensorflow.keras.models import load_model
+from keras.models import load_model
 import argparse
-from deepmutationpp.cnn_mutation_audio.src.utils import summary_model, color_preprocessing, model_predict
+# from deepmutationpp.cnn_mutation_audio.src.utils import summary_model, color_preprocessing, model_predict
+from utils import summary_model, color_preprocessing, model_predict
 from termcolor import colored
 import gc
 import time
@@ -12,7 +15,7 @@ from progressbar import *
 # from audio_model import test_ds
 
 
-def cnn_mutants_generation(ori_model, operator, ratio, standard_deviation=0.5):
+def cnn_mutants_generation(ori_model, operator, ratio, seed, standard_deviation=0.5):
     """
 
     :param ori_model:
@@ -22,9 +25,9 @@ def cnn_mutants_generation(ori_model, operator, ratio, standard_deviation=0.5):
     :return:
     """
     if operator < 5:
-        cnn_operator(ori_model, operator, ratio, standard_deviation)
+        cnn_operator(ori_model, operator, ratio, seed, standard_deviation)
     else:
-        new_model = cnn_operator(ori_model, operator, ratio, standard_deviation)
+        new_model = cnn_operator(ori_model, operator, ratio, seed, standard_deviation)
         return new_model
     return ori_model
 
@@ -92,11 +95,12 @@ def generator():
     while i <= num:
         print("Start")
         if i != 1:
-            model = load_model(model_path, compile=False)
-            print("Tuta")
+            # model = load_model(model_path, compile=False)
+            model = load_model(model_path)
+            # print("Tuta")
         print(i)
         print(model)
-        new_model = cnn_mutants_generation(model, operator, ratio, standard_deviation)
+        new_model = cnn_mutants_generation(model, operator, ratio, i, standard_deviation)
         # new_acc = model_predict(new_model, test_ds)
         # if new_acc < threshold:
         #     K.clear_session()

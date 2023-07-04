@@ -2,10 +2,11 @@ from keras.models import Sequential
 import numpy as np
 import random
 import tensorflow.keras as keras
-from deepmutationpp.cnn_mutation_audio.src.utils import get_type_layers, find_sameshape_layer, summary_model
+# from deepmutationpp.cnn_mutation_audio.src.utils import get_type_layers, find_sameshape_layer, summary_model
+from utils import get_type_layers, find_sameshape_layer, summary_model
 
 
-def cnn_operator(model, operator, ratio, standard_deviation=0.5):
+def cnn_operator(model, operator, ratio, seed, standard_deviation=0.5):
     """
 
     :param model:
@@ -21,6 +22,11 @@ def cnn_operator(model, operator, ratio, standard_deviation=0.5):
     :param standard_deviation:
     :return:
     """
+
+    # Set the seed.
+    np.random.seed(seed)
+    random.seed(seed)
+    
     dense_layer_list, convolution_layer_list, dense_con_layer_list, flatten_layer_list = get_type_layers(model)
     weight_count, neuron_count, weights_dict, neuron_dict = summary_model(model)
     process_weights_num = int(weight_count * ratio) if int(weight_count * ratio) > 0 else 1
