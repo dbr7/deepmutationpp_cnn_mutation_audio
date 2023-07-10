@@ -1,5 +1,6 @@
 import os
 import csv
+import h5py
 import glob
 from deepcrime_scripts.Model import *
 import statsmodels.stats.proportion as smp

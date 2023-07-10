@@ -20,7 +20,7 @@ def load_noise_sample(path):
         sample = tf.split(sample[: slices * SAMPLING_RATE], slices)
         return sample
     else:
-        print("Sampling rate for {} is incorrect. Ignoring it".format(path))
+        # print("Sampling rate for {} is incorrect. Ignoring it".format(path))
         return None
 
 
@@ -54,9 +54,9 @@ def add_noise(audio, noises=None, scale=0.5):
         prop = tf.math.reduce_max(audio, axis=1) / tf.math.reduce_max(noise, axis=1)
         prop = tf.repeat(tf.expand_dims(prop, axis=1), tf.shape(audio)[1], axis=1)
 
-        print('audio shape:', audio.shape)
-        print('noise shape:', noise.shape)
-        print((noise * prop * scale).shape)
+        # print('audio shape:', audio.shape)
+        # print('noise shape:', noise.shape)
+        # print((noise * prop * scale).shape)
         # Adding the rescaled noise to audio
         audio = audio + noise * prop * scale
 
@@ -179,11 +179,11 @@ def get_all_data():
                 if filepath.endswith(".wav")
             ]
 
-    print(
-        "Found {} files belonging to {} directories".format(
-            len(noise_paths), len(os.listdir(DATASET_NOISE_PATH))
-        )
-    )
+    # print(
+    #     "Found {} files belonging to {} directories".format(
+    #         len(noise_paths), len(os.listdir(DATASET_NOISE_PATH))
+    #     )
+    # )
 
     command = (
             "for dir in `ls -1 " + DATASET_NOISE_PATH + "`; do "
@@ -206,20 +206,20 @@ def get_all_data():
             noises.extend(sample)
     noises = tf.stack(noises)
 
-    print(
-        "{} noise files were split into {} noise samples where each is {} sec. long".format(
-            len(noise_paths), noises.shape[0], noises.shape[1] // SAMPLING_RATE
-        )
-    )
+    # print(
+    #     "{} noise files were split into {} noise samples where each is {} sec. long".format(
+    #         len(noise_paths), noises.shape[0], noises.shape[1] // SAMPLING_RATE
+    #     )
+    # )
 
     class_names = ['Julia_Gillard', 'Nelson_Mandela', 'Benjamin_Netanyau', 'Magaret_Tarcher', 'Jens_Stoltenberg']
-    print("Our class names: {}".format(class_names, ))
+    # print("Our class names: {}".format(class_names, ))
 
 
     audio_paths = []
     labels = []
     for label, name in enumerate(class_names):
-        print("Processing speaker {}".format(name, ))
+        # print("Processing speaker {}".format(name, ))
         dir_path = Path(DATASET_AUDIO_PATH) / name
         speaker_sample_paths = [
             os.path.join(dir_path, filepath)
@@ -229,9 +229,9 @@ def get_all_data():
         audio_paths += speaker_sample_paths
         labels += [label] * len(speaker_sample_paths)
 
-    print(
-        "Found {} files belonging to {} classes.".format(len(audio_paths), len(class_names))
-    )
+    # print(
+    #     "Found {} files belonging to {} classes.".format(len(audio_paths), len(class_names))
+    # )
 
     # Shuffle
     rng = np.random.RandomState(SHUFFLE_SEED)
@@ -242,13 +242,13 @@ def get_all_data():
     # Split into training and validation
     num_val_samples = int(VALID_SPLIT * len(audio_paths))
     num_test_samples = int(TEST_SPLIT * (len(audio_paths) - num_val_samples))
-    print("Using {} files for training.".format(len(audio_paths) - num_val_samples))
+    # print("Using {} files for training.".format(len(audio_paths) - num_val_samples))
 
     train_audio_paths = audio_paths[:-num_val_samples]
     train_labels = labels[:-num_val_samples]
     #print(train_audio_paths[0:5])
 
-    print("Using {} files for validation.".format(num_val_samples))
+    # print("Using {} files for validation.".format(num_val_samples))
     valid_audio_paths = audio_paths[-num_val_samples:]
     valid_labels = labels[-num_val_samples:]
 
@@ -308,7 +308,7 @@ def main(model_name):
     # Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/download
     # and save it to the 'Downloads' folder in your HOME directory
 
-    print('model_location', model_location)
+    # print('model_location', model_location)
     train_ds, test_ds, valid_ds, class_names = get_all_data()
     if not os.path.exists(model_location):
         model = build_model((SAMPLING_RATE // 2, 1), len(class_names))
@@ -343,8 +343,8 @@ def main(model_name):
         model = tf.keras.models.load_model(model_location, compile=True)
         score = model.evaluate(test_ds, verbose=0)
 
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
+    # print('Test loss:', score[0])
+    # print('Test accuracy:', score[1])
     return score
 
 

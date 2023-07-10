@@ -37,28 +37,58 @@ class MnistModel(Model):
 
         return x_test, y_test, keras.utils.to_categorical(y_test, num_classes)
 
-    def get_test_data(self):
+    def get_train_data(self):
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
         x_train, y_train, y_train_cl = self.input_reshape_test(x_train, y_train, 10)
         return x_train, y_train, y_train_cl
 
+    def get_test_data(self):
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
+        x_test, y_test, y_test_cl = self.input_reshape_test(x_test, y_test, 10)
+        return x_test, y_test, y_test_cl
+
     def get_prediction_info(self, model_file):
-        x_train, y_train, y_train_cl = self.get_test_data()
+        x_train, y_train, y_train_cl = self.get_train_data()
         graph1 = tf.Graph()
         with graph1.as_default():
             session1 = tf.compat.v1.Session()
             with session1.as_default():
-                print('Predicting for', model_file)
-                model = tf.keras.models.load_model(model_file)
-                # predictions = model.predict_classes(x_train)                
+                # print('Predicting for', model_file)
+                model = tf.keras.models.load_model(model_file)                          
                 predictions = np.argmax(model.predict(x_train), axis=1)
-        array = np.equal(predictions, y_train)
+        
         return np.equal(predictions, y_train)
+    
+    def get_prediction_info_strong_testset(self, model_file):
+        x_test, y_test, y_test_cl = self.get_test_data()
+        graph1 = tf.Graph()
+        with graph1.as_default():
+            session1 = tf.compat.v1.Session()
+            with session1.as_default():
+                # print('Predicting for', model_file)
+                model = tf.keras.models.load_model(model_file)                        
+                predictions = np.argmax(model.predict(x_test), axis=1)
+        
+        return np.equal(predictions, y_test)
 
+    def get_prediction_info_weak_testset(self, model_file, dataset_path):        
+        hf = h5py.File(dataset_path, 'r')        
+        y_test = np.asarray(hf.get('y_test'))
+        x_test = np.asarray(hf.get('x_test'))
+
+        graph1 = tf.Graph()
+        with graph1.as_default():
+            session1 = tf.compat.v1.Session()
+            with session1.as_default():
+                # print('Predicting for', model_file)
+                model = tf.keras.models.load_model(model_file)                            
+                predictions = np.argmax(model.predict(x_test), axis=1)
+        
+        return np.equal(predictions, y_test)
 
 class MovieModel(Model):
     movielens_dir = os.path.join('..', '..', 'Datasets', 'MovieRecommender', 'ml-latest-small')
-    def get_test_data(self):
+    def get_train_data(self):
         ratings_file = os.path.join(self.movielens_dir, "ratings.csv")
         df = pd.read_csv(ratings_file)
         user_ids = df["userId"].unique().tolist()
@@ -77,9 +107,9 @@ class MovieModel(Model):
         min_rating = min(df["rating"])
         max_rating = max(df["rating"])
 
-        print("Number of users: {}, Number of Movies: {}, Min rating: {}, Max rating: {}".format(num_users, num_movies,
-                                                                                                 min_rating,
-                                                                                                 max_rating))
+        # print("Number of users: {}, Number of Movies: {}, Min rating: {}, Max rating: {}".format(num_users, num_movies,
+        #                                                                                          min_rating,
+        #                                                                                          max_rating))
         df = df.sample(frac=1, random_state=42)
         x = df[["user", "movie"]].values
         # Normalize the targets between 0 and 1. Makes it easy to train.
@@ -123,15 +153,15 @@ class MovieModel(Model):
         return modell
 
     def get_prediction_info(self, model_file):
-        x_test, y_test = self.get_test_data()
+        x_train, y_train = self.get_train_data()
         graph1 = tf.Graph()
         with graph1.as_default():
             session1 = tf.compat.v1.Session()
             with session1.as_default():
                 model = self.get_model(model_file)
-                predictions = model.predict(x_test)
+                predictions = model.predict(x_train)
 
-        diff = np.abs(predictions.flatten() - y_test)
+        diff = np.abs(predictions.flatten() - y_train)
         array = diff <= 0.12
         return array
 
@@ -172,18 +202,55 @@ class RecommenderNet(keras.Model):
 
 class AudioModel(Model):
 
-    def get_test_data(self):
+    def get_train_data(self):
         train_ds, test_ds, valid_ds, class_names = get_all_data()
         return train_ds
+    
+    def get_test_data(self):
+        train_ds, test_ds, valid_ds, class_names = get_all_data()
+        return test_ds
 
     def get_prediction_info(self, model_file):
+        train_ds = self.get_train_data()
+
+        audio_model = tf.keras.models.load_model(model_file)
+        equality_array = np.empty(0, dtype = bool)
+        
+        for element in train_ds:            
+            predicted = np.argmax(audio_model.predict(element[0]), axis = 1)
+            correct_prediction_array = element[1].numpy()
+            partial_equality_array = np.equal(predicted, correct_prediction_array)
+            equality_array = np.append(equality_array, partial_equality_array, axis = 0)
+
+        return equality_array
+    
+    def get_prediction_info_strong_testset(self, model_file):
         test_ds = self.get_test_data()
-        index = 0
 
         audio_model = tf.keras.models.load_model(model_file)
         equality_array = np.empty(0, dtype = bool)
         
         for element in test_ds:            
+            predicted = np.argmax(audio_model.predict(element[0]), axis = 1)
+            correct_prediction_array = element[1].numpy()
+            partial_equality_array = np.equal(predicted, correct_prediction_array)
+            equality_array = np.append(equality_array, partial_equality_array, axis = 0)
+
+        return equality_array
+    
+    def get_prediction_info_weak_testset(self, model_file, dataset_path):        
+        weak_ts_x = np.load(os.path.join(dataset_path, 'audio_easy_x.npy'))
+        weak_ts_y = np.load(os.path.join(dataset_path, 'audio_easy_y.npy'))   
+        weak_test_ds = tf.data.Dataset.zip(
+            (tf.data.Dataset.from_tensor_slices(weak_ts_x), tf.data.Dataset.from_tensor_slices(weak_ts_y)))
+        weak_test_ds = weak_test_ds.batch(32)
+        weak_test_ds = weak_test_ds.prefetch(tf.data.experimental.AUTOTUNE)        
+
+        
+        audio_model = tf.keras.models.load_model(model_file)
+        equality_array = np.empty(0, dtype = bool)
+        
+        for element in weak_test_ds:            
             predicted = np.argmax(audio_model.predict(element[0]), axis = 1)
             correct_prediction_array = element[1].numpy()
             partial_equality_array = np.equal(predicted, correct_prediction_array)
@@ -302,8 +369,8 @@ class UdacityModel(Model):
             print("Missing header to csv files")
             exit()
 
-        print("Train dataset: " + str(len(x_train)) + " elements")
-        print("Test dataset: " + str(len(x_valid)) + " elements")
+        # print("Train dataset: " + str(len(x_train)) + " elements")
+        # print("Test dataset: " + str(len(x_valid)) + " elements")
         return x_train, x_valid, y_train, y_valid
 
     def get_prediction_info(self, model_file):

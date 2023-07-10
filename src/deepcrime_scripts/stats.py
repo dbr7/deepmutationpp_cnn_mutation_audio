@@ -20,21 +20,28 @@ def cohen_d(orig_accuracy_list, accuracy_list):
 
 #calculates whether two accuracy arrays are statistically different according to GLM
 def is_diff_sts_regression(orig_accuracy_list, accuracy_list, threshold = 0.05):
-
-    p_value = p_value_glm(orig_accuracy_list, accuracy_list)
-    effect_size = cohen_d(orig_accuracy_list, accuracy_list)
-    is_sts = ((p_value < threshold) and effect_size <= -0.5)
-
+    try:
+        p_value = p_value_glm(orig_accuracy_list, accuracy_list)
+        effect_size = cohen_d(orig_accuracy_list, accuracy_list)
+        is_sts = ((p_value < threshold) and effect_size <= -0.5)
+    except:
+        is_sts = False
+        p_value = 1
+        effect_size = 0
+    
     return is_sts, p_value, effect_size
 
 def is_diff_sts_classification(orig_accuracy_list, accuracy_list, threshold = 0.05):
-
-    p_value = p_value_glm(orig_accuracy_list, accuracy_list)
-    effect_size = cohen_d(orig_accuracy_list, accuracy_list)
-    is_sts = ((p_value < threshold) and effect_size >= 0.5)
+    try:
+        p_value = p_value_glm(orig_accuracy_list, accuracy_list)
+        effect_size = cohen_d(orig_accuracy_list, accuracy_list)
+        is_sts = ((p_value < threshold) and effect_size >= 0.5)
+    except:
+        is_sts = False
+        p_value = 1
+        effect_size = 0
 
     return is_sts, p_value, effect_size
-
 
 def p_value_wilcoxon(orig_accuracy_list, accuracy_list):
     w, p_value_w = wilcoxon(orig_accuracy_list, accuracy_list)
