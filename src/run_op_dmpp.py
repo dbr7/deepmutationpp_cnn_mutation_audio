@@ -32,7 +32,7 @@ if __name__ == "__main__":
     subject_name = 'audio' #
     base_model = get_subject_model(subject_name)
     orig_model_dir = f'{DMPP_HOME_PATH}/original_models/multiple_training/'
-    base_model_accs_path = f'{orig_model_dir}/{subject_name}_original_acc.txt'
+    base_model_accs_path = f'{orig_model_dir}/{subject_name}_original_acc_trainset.txt'
 
     # Get original accs
     orig_accs = []
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Generate mutants
     for model_no in range(tatal_model_training): 
         # The mutants will be saved to "mutants_path"
-        mutants_path = f'{DMPP_HOME_PATH}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
+        mutants_path = f'{DMPP_HOME_PATH}/dmpp_mutants_{subject_name}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
         orig_model_path = f'{orig_model_dir}/{subject_name}_original_{model_no}.h5'
 
         if not os.path.exists(mutants_path):
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     for mut_no in range(1, total_mutant_num+1): # mut_no starts from 1
         mutant_accs = []
         for model_no in range(tatal_model_training):
-            mutants_path = f'{DMPP_HOME_PATH}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
+            mutants_path = f'{DMPP_HOME_PATH}/dmpp_mutants_{subject_name}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
             for path in sorted(os.listdir(mutants_path)):
                 if path.endswith(f"_{mut_no}.h5"):
                     mutant_prediction_info = get_prediction_array_dmpp(base_model, path[:-3], mutants_path)
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             print(f'Mutant {mut_no} is not STS')
             # Remove the mutants if not killed (due to space limit of my computer)
             for model_no in range(tatal_model_training):
-                mutants_path = f'{DMPP_HOME_PATH}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
+                mutants_path = f'{DMPP_HOME_PATH}/dmpp_mutants_{subject_name}/mutated_models_{subject_name}_trained:{model_no}/{op_no}'
                 for path in sorted(os.listdir(mutants_path)):
                     if path.endswith(f"_{mut_no}.h5"):
                         os.remove(os.path.join(mutants_path, path))

@@ -43,7 +43,8 @@ if __name__ == "__main__":
     subject_name = 'audio'        
     num_models = 20
     num_mutants = 20
-    ops = [0, 1, 2, 3, 4, 7] #, 5, 6 not applicable
+    # ops = [0, 1, 2, 3, 4, 7] #, 5, 6 not applicable
+    ops = [sys.argv[1]]
     orig_model_dir = f'{DMPP_HOME_PATH}/original_models/multiple_training/'
     
     base_model = get_subject_model(subject_name)
